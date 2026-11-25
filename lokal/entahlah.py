@@ -9,7 +9,7 @@ import os
 import math
 
 
-port = 4002
+port = 4000
 ROOT = Path(__file__).resolve().parent.parent
 os.chdir(ROOT)
 PATH_FILE = ROOT / "app" / "path.json"
