@@ -1,5 +1,6 @@
 const petaG = document.querySelector("#petaG");
 const sidebarIcon = petaG.querySelector(".sidebar-icon");
+const grid = window.GridBuilder;
 
 let sidebarDragging = false;
 let sidebarOffsetX = 0;
@@ -63,6 +64,10 @@ async function saveSidebarPosition() {
     console.error("Posisi sidebar gagal disimpan:", error);
   }
 }
+
+sidebarIcon.addEventListener("click", event => {
+  if (event.detail === 0 || !sidebarDragging) grid?.toggle();
+});
 
 sidebarIcon.addEventListener("pointerdown", event => {
   sidebarDragging = true;
