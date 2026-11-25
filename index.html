@@ -29,7 +29,14 @@
       height: 36px;
       color: #fff;
       mix-blend-mode: difference;
-      pointer-events: none;
+      cursor: grab;
+      touch-action: none;
+      user-select: none;
+      z-index: 1000;
+    }
+
+    .emergency-icon:active {
+      cursor: grabbing;
     }
 
     .emergency-icon svg {
@@ -41,6 +48,7 @@
       stroke-width: 2.5;
       stroke-linecap: round;
       stroke-linejoin: round;
+      pointer-events: none;
     }
   </style>
 </head>
@@ -51,5 +59,84 @@
       <path d="M18 10v16M10 18h16"></path>
     </svg>
   </span>
+
+  <script>
+    const icon = document.querySelector(".emergency-icon");
+    let dragging = false;
+    let offsetX = 0;
+    let offsetY = 0;
+
+    async function loadIconPosition() {
+      try {
+        const response = await fetch("/ikon.json", { cache: "no-store" });
+        if (!response.ok) return;
+
+        const position = await response.json();
+        if (Number.isInteger(position.left) && Number.isInteger(position.top)) {
+          icon.style.left = position.left + "px";
+          icon.style.top = position.top + "px";
+          icon.style.right = "auto";
+        }
+      } catch (error) {
+        console.warn("Posisi ikon belum dapat dimuat:", error);
+      }
+    }
+
+    function moveIcon(event) {
+      if (!dragging) return;
+
+      const maxX = window.innerWidth - icon.offsetWidth;
+      const maxY = window.innerHeight - icon.offsetHeight;
+      const left = Math.max(0, Math.min(maxX, event.clientX - offsetX));
+      const top = Math.max(0, Math.min(maxY, event.clientY - offsetY));
+
+      icon.style.left = left + "px";
+      icon.style.top = top + "px";
+      icon.style.right = "auto";
+    }
+
+    async function saveIconPosition() {
+      const position = {
+        left: Math.round(icon.offsetLeft),
+        top: Math.round(icon.offsetTop)
+      };
+
+      try {
+        const response = await fetch("/ikon.json", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(position)
+        });
+
+        if (!response.ok) throw new Error("HTTP " + response.status);
+      } catch (error) {
+        console.error("Posisi ikon gagal disimpan:", error);
+      }
+    }
+
+    icon.addEventListener("pointerdown", event => {
+      dragging = true;
+      const rect = icon.getBoundingClientRect();
+      offsetX = event.clientX - rect.left;
+      offsetY = event.clientY - rect.top;
+      icon.setPointerCapture(event.pointerId);
+      event.preventDefault();
+    });
+
+    icon.addEventListener("pointermove", moveIcon);
+
+    icon.addEventListener("pointerup", async event => {
+      if (!dragging) return;
+      dragging = false;
+      icon.releasePointerCapture(event.pointerId);
+      await saveIconPosition();
+    });
+
+    icon.addEventListener("pointercancel", () => {
+      dragging = false;
+    });
+
+    loadIconPosition();
+  </script>
 </body>
 </html>
