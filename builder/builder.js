@@ -1,90 +1,90 @@
 const petaG = document.querySelector("#petaG");
-const icon = petaG.querySelector(".emergency-icon");
+const sidebarIcon = petaG.querySelector(".sidebar-icon");
 
-let dragging = false;
-let offsetX = 0;
-let offsetY = 0;
-let position = { x: 1, y: 0 };
+let sidebarDragging = false;
+let sidebarOffsetX = 0;
+let sidebarOffsetY = 0;
+let sidebarPosition = { x: 1, y: 0 };
 
-function renderPosition() {
-  const maxX = Math.max(0, petaG.clientWidth - icon.offsetWidth);
-  const maxY = Math.max(0, petaG.clientHeight - icon.offsetHeight);
+function renderSidebarPosition() {
+  const maxX = Math.max(0, petaG.clientWidth - sidebarIcon.offsetWidth);
+  const maxY = Math.max(0, petaG.clientHeight - sidebarIcon.offsetHeight);
 
-  icon.style.left = (position.x * maxX) + "px";
-  icon.style.top = (position.y * maxY) + "px";
+  sidebarIcon.style.left = (sidebarPosition.x * maxX) + "px";
+  sidebarIcon.style.top = (sidebarPosition.y * maxY) + "px";
 }
 
-async function loadIconPosition() {
+async function loadSidebarPosition() {
   try {
-    const response = await fetch("/builder/ikon.json", { cache: "no-store" });
+    const response = await fetch("/builder/sidebar.json", { cache: "no-store" });
     if (!response.ok) return;
 
     const saved = await response.json();
     if (Number.isFinite(saved.x) && Number.isFinite(saved.y)) {
-      position = {
+      sidebarPosition = {
         x: Math.max(0, Math.min(1, saved.x)),
         y: Math.max(0, Math.min(1, saved.y))
       };
     }
   } catch (error) {
-    console.warn("Posisi ikon belum dapat dimuat:", error);
+    console.warn("Posisi sidebar belum dapat dimuat:", error);
   }
 
-  renderPosition();
+  renderSidebarPosition();
 }
 
-function moveIcon(event) {
-  if (!dragging) return;
+function moveSidebar(event) {
+  if (!sidebarDragging) return;
 
   const area = petaG.getBoundingClientRect();
-  const maxX = Math.max(0, area.width - icon.offsetWidth);
-  const maxY = Math.max(0, area.height - icon.offsetHeight);
-  const left = Math.max(0, Math.min(maxX, event.clientX - area.left - offsetX));
-  const top = Math.max(0, Math.min(maxY, event.clientY - area.top - offsetY));
+  const maxX = Math.max(0, area.width - sidebarIcon.offsetWidth);
+  const maxY = Math.max(0, area.height - sidebarIcon.offsetHeight);
+  const left = Math.max(0, Math.min(maxX, event.clientX - area.left - sidebarOffsetX));
+  const top = Math.max(0, Math.min(maxY, event.clientY - area.top - sidebarOffsetY));
 
-  position = {
+  sidebarPosition = {
     x: maxX ? left / maxX : 0,
     y: maxY ? top / maxY : 0
   };
 
-  renderPosition();
+  renderSidebarPosition();
 }
 
-async function saveIconPosition() {
+async function saveSidebarPosition() {
   try {
-    const response = await fetch("/builder/ikon.json", {
+    const response = await fetch("/builder/sidebar.json", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(position)
+      body: JSON.stringify(sidebarPosition)
     });
 
     if (!response.ok) throw new Error("HTTP " + response.status);
   } catch (error) {
-    console.error("Posisi ikon gagal disimpan:", error);
+    console.error("Posisi sidebar gagal disimpan:", error);
   }
 }
 
-icon.addEventListener("pointerdown", event => {
-  dragging = true;
-  const rect = icon.getBoundingClientRect();
-  offsetX = event.clientX - rect.left;
-  offsetY = event.clientY - rect.top;
-  icon.setPointerCapture(event.pointerId);
+sidebarIcon.addEventListener("pointerdown", event => {
+  sidebarDragging = true;
+  const rect = sidebarIcon.getBoundingClientRect();
+  sidebarOffsetX = event.clientX - rect.left;
+  sidebarOffsetY = event.clientY - rect.top;
+  sidebarIcon.setPointerCapture(event.pointerId);
   event.preventDefault();
 });
 
-icon.addEventListener("pointermove", moveIcon);
+sidebarIcon.addEventListener("pointermove", moveSidebar);
 
-icon.addEventListener("pointerup", async event => {
-  if (!dragging) return;
-  dragging = false;
-  icon.releasePointerCapture(event.pointerId);
-  await saveIconPosition();
+sidebarIcon.addEventListener("pointerup", async event => {
+  if (!sidebarDragging) return;
+  sidebarDragging = false;
+  sidebarIcon.releasePointerCapture(event.pointerId);
+  await saveSidebarPosition();
 });
 
-icon.addEventListener("pointercancel", () => {
-  dragging = false;
+sidebarIcon.addEventListener("pointercancel", () => {
+  sidebarDragging = false;
 });
 
-window.addEventListener("resize", renderPosition);
-loadIconPosition();
+window.addEventListener("resize", renderSidebarPosition);
+loadSidebarPosition();
