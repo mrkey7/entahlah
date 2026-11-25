@@ -6,6 +6,8 @@ import webbrowser
 
 
 ROOT = Path(__file__).resolve().parent.parent
+BUILDER = ROOT / "builder"
+ICON_CONFIG = BUILDER / "ikon.json"
 HOST = "127.0.0.1"
 PORT = 4000
 URL = f"http://{HOST}:{PORT}"
@@ -16,7 +18,7 @@ class Handler(SimpleHTTPRequestHandler):
         super().__init__(*args, directory=str(ROOT), **kwargs)
 
     def do_POST(self):
-        if self.path != "/ikon.json":
+        if self.path != "/builder/ikon.json":
             self.send_error(404)
             return
 
@@ -29,14 +31,16 @@ class Handler(SimpleHTTPRequestHandler):
             if not isinstance(data, dict):
                 raise ValueError("Format JSON tidak valid")
 
-            left = data.get("left")
-            top = data.get("top")
-            if (not isinstance(left, int) or isinstance(left, bool)
-                    or not isinstance(top, int) or isinstance(top, bool)):
-                raise ValueError("Posisi harus berupa bilangan bulat")
+            x = data.get("x")
+            y = data.get("y")
+            if (not isinstance(x, (int, float)) or isinstance(x, bool)
+                    or not isinstance(y, (int, float)) or isinstance(y, bool)
+                    or not 0 <= x <= 1 or not 0 <= y <= 1):
+                raise ValueError("Koordinat harus berupa angka antara 0 dan 1")
 
-            (ROOT / "ikon.json").write_text(
-                json.dumps({"left": left, "top": top}, indent=2) + "\n",
+            BUILDER.mkdir(exist_ok=True)
+            ICON_CONFIG.write_text(
+                json.dumps({"x": x, "y": y}, indent=2) + "\n",
                 encoding="utf-8"
             )
 
