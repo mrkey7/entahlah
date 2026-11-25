@@ -1,0 +1,69 @@
+#gridOverlay,
+#gridPreviewOverlay {
+  position: absolute;
+  inset: 0 auto auto 0;
+  z-index: 10;
+  display: none;
+  pointer-events: none;
+  box-sizing: border-box;
+  overflow: hidden;
+  background-color: transparent;
+  border: 0;
+  box-shadow: inset 0 0 0 var(--grid-outline-width, 1px) rgba(255, 70, 70, .85);
+  background-image:
+    linear-gradient(to right, rgba(255, 70, 70, .72) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 70, 70, .72) 1px, transparent 1px);
+  background-size:
+    calc(100% / var(--grid-kolom, 4)) 100%,
+    100% calc(100% / var(--grid-baris, 4));
+  background-repeat: repeat, repeat;
+}
+#gridOverlay.aktif,
+#gridPreviewOverlay.aktif { display: block; }
+
+.grid-panel {
+  position: absolute;
+  z-index: 20;
+  top: 12px;
+  left: 12px;
+  width: min(360px, calc(100% - 24px));
+  padding: 12px;
+  box-sizing: border-box;
+  border: 1px solid #777;
+  border-radius: 8px;
+  background: rgba(255,255,255,.96);
+  color: #222;
+  font: 13px/1.4 system-ui, sans-serif;
+  box-shadow: 0 4px 18px rgba(0,0,0,.2);
+}
+.grid-panel[hidden] { display: none !important; }
+.grid-panel h2 { margin: 0 0 10px; font-size: 15px; }
+.grid-panel .grid-head,
+.grid-panel .grid-controls { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+.grid-panel .grid-controls { margin-top:10px; flex-wrap:wrap; }
+.grid-panel label { display:flex; align-items:center; gap:5px; }
+.grid-panel input[type="number"] { width:64px; }
+.grid-picker {
+  display:grid;
+  grid-template-columns:repeat(10,minmax(0,1fr));
+  gap:3px;
+  width:min(220px,100%);
+  margin-top:10px;
+  padding:5px;
+  border:1px solid #bbb;
+  background:#fafafa;
+}
+.grid-picker button {
+  aspect-ratio:1;
+  min-width:0;
+  padding:0;
+  border:1px solid #aaa;
+  background:white;
+  cursor:pointer;
+}
+.grid-picker button.is-preview { border-color:#e76b26; background:#ffe5d4; }
+.grid-picker button.is-current { outline:1px solid #777; outline-offset:-2px; }
+.grid-status { font-weight:600; }
+.grid-panel button { cursor:pointer; }
+.grid-panel button:focus-visible { outline:2px solid #4677c8; outline-offset:2px; }
+.grid-close { border:0; background:transparent; font-size:18px; }
