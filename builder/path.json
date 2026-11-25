@@ -1,5 +1,11 @@
 {
   "css": "builder/builder.css",
   "js": "builder/builder.js",
-  "sidebar_position": "builder/sidebar.json"
-}
+  "sidebar_position": "builder/sidebar.json",
+  "grid": {
+    "js": "builder/grid/grid.js",
+    "css": "builder/grid/grid.css",
+    "layout": "builder/grid/notasi-a1.js",
+    "config": "builder/grid/config.json"
+  }
+}\n
