@@ -1,6 +1,5 @@
 const petaG = document.querySelector("#petaG");
 const sidebarIcon = petaG.querySelector(".sidebar-icon");
-const grid = window.GridBuilder;
 
 let sidebarDragging = false;
 let sidebarOffsetX = 0;
@@ -37,6 +36,7 @@ async function loadSidebarPosition() {
 function moveSidebar(event) {
   if (!sidebarDragging) return;
 
+  sidebarIcon.dataset.dragged = "1";
   const area = petaG.getBoundingClientRect();
   const maxX = Math.max(0, area.width - sidebarIcon.offsetWidth);
   const maxY = Math.max(0, area.height - sidebarIcon.offsetHeight);
@@ -65,12 +65,14 @@ async function saveSidebarPosition() {
   }
 }
 
-sidebarIcon.addEventListener("click", event => {
-  if (event.detail === 0 || !sidebarDragging) grid?.toggle();
+sidebarIcon.addEventListener("click", () => {
+  if (sidebarIcon.dataset.dragged !== "1") window.GridBuilder?.toggle();
+  sidebarIcon.dataset.dragged = "0";
 });
 
 sidebarIcon.addEventListener("pointerdown", event => {
   sidebarDragging = true;
+  sidebarIcon.dataset.dragged = "0";
   const rect = sidebarIcon.getBoundingClientRect();
   sidebarOffsetX = event.clientX - rect.left;
   sidebarOffsetY = event.clientY - rect.top;
@@ -93,3 +95,4 @@ sidebarIcon.addEventListener("pointercancel", () => {
 
 window.addEventListener("resize", renderSidebarPosition);
 loadSidebarPosition();
+window.initGridBuilder?.(petaG);
