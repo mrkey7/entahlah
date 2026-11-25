@@ -10,6 +10,13 @@
       width: 100%;
       height: 100%;
       margin: 0;
+      overflow: hidden;
+    }
+
+    #petaG {
+      position: fixed;
+      inset: 0;
+      container-type: size;
       background-color: #fff;
       background-image:
         linear-gradient(45deg, #c8c8c8 25%, transparent 25%),
@@ -22,11 +29,11 @@
     }
 
     .emergency-icon {
-      position: fixed;
-      top: 16px;
-      right: 16px;
-      width: 36px;
-      height: 36px;
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: clamp(28px, 3cqw, 64px);
+      aspect-ratio: 1;
       color: #fff;
       mix-blend-mode: difference;
       cursor: grab;
@@ -53,56 +60,71 @@
   </style>
 </head>
 <body>
-  <span class="emergency-icon" role="img" aria-label="Emergency">
-    <svg viewBox="0 0 36 36" aria-hidden="true">
-      <circle cx="18" cy="18" r="15"></circle>
-      <path d="M18 10v16M10 18h16"></path>
-    </svg>
-  </span>
+  <main id="petaG">
+    <span class="emergency-icon" role="img" aria-label="Emergency">
+      <svg viewBox="0 0 36 36" aria-hidden="true">
+        <circle cx="18" cy="18" r="15"></circle>
+        <path d="M18 10v16M10 18h16"></path>
+      </svg>
+    </span>
+  </main>
 
   <script>
-    const icon = document.querySelector(".emergency-icon");
+    const petaG = document.querySelector("#petaG");
+    const icon = petaG.querySelector(".emergency-icon");
+
     let dragging = false;
     let offsetX = 0;
     let offsetY = 0;
+    let position = { x: 1, y: 0 };
+
+    function renderPosition() {
+      const maxX = Math.max(0, petaG.clientWidth - icon.offsetWidth);
+      const maxY = Math.max(0, petaG.clientHeight - icon.offsetHeight);
+
+      icon.style.left = (position.x * maxX) + "px";
+      icon.style.top = (position.y * maxY) + "px";
+    }
 
     async function loadIconPosition() {
       try {
-        const response = await fetch("/ikon.json", { cache: "no-store" });
+        const response = await fetch("/builder/ikon.json", { cache: "no-store" });
         if (!response.ok) return;
 
-        const position = await response.json();
-        if (Number.isInteger(position.left) && Number.isInteger(position.top)) {
-          icon.style.left = position.left + "px";
-          icon.style.top = position.top + "px";
-          icon.style.right = "auto";
+        const saved = await response.json();
+        if (Number.isFinite(saved.x) && Number.isFinite(saved.y)) {
+          position = {
+            x: Math.max(0, Math.min(1, saved.x)),
+            y: Math.max(0, Math.min(1, saved.y))
+          };
         }
       } catch (error) {
         console.warn("Posisi ikon belum dapat dimuat:", error);
       }
+
+      renderPosition();
     }
 
     function moveIcon(event) {
       if (!dragging) return;
 
-      const maxX = window.innerWidth - icon.offsetWidth;
-      const maxY = window.innerHeight - icon.offsetHeight;
-      const left = Math.max(0, Math.min(maxX, event.clientX - offsetX));
-      const top = Math.max(0, Math.min(maxY, event.clientY - offsetY));
+      const area = petaG.getBoundingClientRect();
+      const maxX = Math.max(0, area.width - icon.offsetWidth);
+      const maxY = Math.max(0, area.height - icon.offsetHeight);
+      const left = Math.max(0, Math.min(maxX, event.clientX - area.left - offsetX));
+      const top = Math.max(0, Math.min(maxY, event.clientY - area.top - offsetY));
 
-      icon.style.left = left + "px";
-      icon.style.top = top + "px";
-      icon.style.right = "auto";
+      position = {
+        x: maxX ? left / maxX : 0,
+        y: maxY ? top / maxY : 0
+      };
+
+      renderPosition();
     }
 
     async function saveIconPosition() {
-      const position = {
-        left: Math.round(icon.offsetLeft),
-        top: Math.round(icon.offsetTop)
-      };
-
       try {
-        const response = await fetch("/ikon.json", {
+        const response = await fetch("/builder/ikon.json", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(position)
@@ -136,6 +158,7 @@
       dragging = false;
     });
 
+    window.addEventListener("resize", renderPosition);
     loadIconPosition();
   </script>
 </body>
