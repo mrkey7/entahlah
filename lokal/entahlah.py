@@ -7,7 +7,7 @@ import webbrowser
 
 ROOT = Path(__file__).resolve().parent.parent
 BUILDER = ROOT / "builder"
-ICON_CONFIG = BUILDER / "ikon.json"
+SIDEBAR_CONFIG = BUILDER / "sidebar.json"
 HOST = "127.0.0.1"
 PORT = 4000
 URL = f"http://{HOST}:{PORT}"
@@ -18,7 +18,7 @@ class Handler(SimpleHTTPRequestHandler):
         super().__init__(*args, directory=str(ROOT), **kwargs)
 
     def do_POST(self):
-        if self.path != "/builder/ikon.json":
+        if self.path != "/builder/sidebar.json":
             self.send_error(404)
             return
 
@@ -39,7 +39,7 @@ class Handler(SimpleHTTPRequestHandler):
                 raise ValueError("Koordinat harus berupa angka antara 0 dan 1")
 
             BUILDER.mkdir(exist_ok=True)
-            ICON_CONFIG.write_text(
+            SIDEBAR_CONFIG.write_text(
                 json.dumps({"x": x, "y": y}, indent=2) + "\n",
                 encoding="utf-8"
             )
