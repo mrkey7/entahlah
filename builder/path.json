@@ -1,0 +1,5 @@
+{
+  "css": "builder/builder.css",
+  "js": "builder/builder.js",
+  "icon_position": "builder/ikon.json"
+}
