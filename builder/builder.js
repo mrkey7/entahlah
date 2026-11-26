@@ -14,6 +14,7 @@ let pointerStartX = 0;
 let pointerStartY = 0;
 let pointerStartWidth = SIDEBAR_SIZE_DEFAULT.width;
 let pointerStartHeight = SIDEBAR_SIZE_DEFAULT.height;
+let pointerStartCenterY = 0;
 let resizeAxes = { x: false, y: false };
 let resizeSigns = { x: -1, y: 1 };
 let saveChangesEnabled = false;
@@ -183,11 +184,15 @@ function getResizeHandle(event, rect) {
 
   const horizontal = left || right;
   const vertical = top || bottom;
+  const corner = horizontal && vertical;
+  const side = horizontal ? "ew-resize" : vertical ? "ns-resize" : "pointer";
+  const cornerCursor = (left && top) || (right && bottom) ? "nwse-resize" : "nesw-resize";
   return {
     x: horizontal,
     y: vertical,
     signX: -1,
-    signY: top ? -1 : 1
+    signY: top ? -1 : 1,
+    cursor: corner ? cornerCursor : side
   };
 }
 
@@ -195,6 +200,7 @@ sidebarIcon.addEventListener("pointerdown", event => {
   if (event.button !== 0) return;
   const currentSize = sidebarIcon.getBoundingClientRect();
   resizeAxes = getResizeHandle(event, currentSize);
+  sidebarIcon.style.cursor = resizeAxes.cursor;
   if (!resizeAxes.x && !resizeAxes.y) return;
 
   pointerActive = true;
@@ -203,6 +209,7 @@ sidebarIcon.addEventListener("pointerdown", event => {
   pointerStartY = event.clientY;
   pointerStartWidth = currentSize.width;
   pointerStartHeight = currentSize.height;
+  pointerStartCenterY = currentSize.top + currentSize.height / 2;
   resizeSigns = { x: resizeAxes.signX, y: resizeAxes.signY };
   sidebarIcon.setPointerCapture(event.pointerId);
 });
@@ -222,11 +229,17 @@ sidebarIcon.addEventListener("pointermove", event => {
     ? pointerStartHeight + deltaY * resizeSigns.y
     : pointerStartHeight;
   applySidebarSize(width, height);
+  if (resizeAxes.y) {
+    const groupTop = petaG.getBoundingClientRect().top;
+    const centerY = pointerStartCenterY + deltaY / 2;
+    petaG.style.setProperty("--sidebar-y", (centerY - groupTop) + "px");
+  }
 });
 
 sidebarIcon.addEventListener("pointerup", event => {
   if (!pointerActive) return;
   pointerActive = false;
+  sidebarIcon.style.cursor = "pointer";
   if (pointerMoved) {
     suppressClick = true;
     if (saveChangesEnabled) saveSidebarConfig();
@@ -238,6 +251,7 @@ sidebarIcon.addEventListener("pointerup", event => {
 
 sidebarIcon.addEventListener("pointercancel", () => {
   pointerActive = false;
+  sidebarIcon.style.cursor = "pointer";
   if (pointerMoved) {
     if (saveChangesEnabled) saveSidebarConfig();
   }
