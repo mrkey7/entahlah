@@ -99,25 +99,16 @@ function buildSidebarMenu() {
   themeChoice.addEventListener("change", () => applyTheme(themeChoice.value));
   applyTheme(savedTheme);
 
-  let gridVisible = false;
-  try {
-    const gridConfig = JSON.parse(localStorage.getItem(GRID_CONFIG_STORAGE_KEY) || "null");
-    gridVisible = Boolean(gridConfig?.aktif);
-  } catch (error) {
-    console.warn("Status Grid tidak dapat dimuat:", error);
-  }
-
-  gridToolChoice.checked = gridVisible;
-
-  async function setGridVisible(visible) {
+  async function setGridToolOpen(open) {
     if (!window.GridBuilder && window.initGridBuilder) {
       await window.initGridBuilder({ panelArea: petaS, areas: { G: petaG, S: petaS, P: petaP } });
     }
-    window.GridBuilder?.setVisible(visible);
+    if (open) window.GridBuilder?.open();
+    else window.GridBuilder?.close();
   }
 
-  gridToolChoice.addEventListener("change", () => setGridVisible(gridToolChoice.checked));
-  if (window.initGridBuilder) setGridVisible(gridVisible);
+  gridToolChoice.checked = false;
+  gridToolChoice.addEventListener("change", () => setGridToolOpen(gridToolChoice.checked));
 }
 
 sidebarIcon.addEventListener("pointerdown", event => {
