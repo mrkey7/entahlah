@@ -173,3 +173,16 @@ body {
 
 .sidebar-check { display: flex; align-items: center; gap: 6px; margin-top: 8px; }
 .sidebar-check input { margin: 0; }
+
+
+.sidebar-resize-toggle {
+  justify-self: start;
+  padding: 6px 12px;
+  border: 1px solid currentColor;
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
