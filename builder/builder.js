@@ -138,8 +138,14 @@ function buildSidebarMenu() {
   const saveChangesChoice = petaS.querySelector("#saveChangesChoice");
 
   saveChangesChoice.checked = false;
+  saveChangesEnabled = false;
+  sidebarIcon.classList.remove("resize-enabled");
   saveChangesChoice.addEventListener("change", () => {
     saveChangesEnabled = saveChangesChoice.checked;
+    sidebarIcon.classList.toggle("resize-enabled", saveChangesEnabled);
+    sidebarIcon.setAttribute("aria-label", saveChangesEnabled
+      ? "Editor ukuran aktif: tarik sisi atau sudut untuk mengubah ukuran"
+      : "Buka atau tutup sidebar");
   });
 
   function applyTheme(theme) {
@@ -197,7 +203,7 @@ function getResizeHandle(event, rect) {
 }
 
 sidebarIcon.addEventListener("pointerdown", event => {
-  if (event.button !== 0) return;
+  if (event.button !== 0 || !saveChangesEnabled) return;
   const currentSize = sidebarIcon.getBoundingClientRect();
   resizeAxes = getResizeHandle(event, currentSize);
   sidebarIcon.style.cursor = resizeAxes.cursor;
@@ -216,6 +222,10 @@ sidebarIcon.addEventListener("pointerdown", event => {
 
 sidebarIcon.addEventListener("pointermove", event => {
   if (!pointerActive) {
+    if (!saveChangesEnabled) {
+      sidebarIcon.style.cursor = "pointer";
+      return;
+    }
     const rect = sidebarIcon.getBoundingClientRect();
     sidebarIcon.style.cursor = getResizeHandle(event, rect).cursor;
     return;
@@ -246,7 +256,7 @@ sidebarIcon.addEventListener("pointerup", event => {
   sidebarIcon.style.cursor = "pointer";
   if (pointerMoved) {
     suppressClick = true;
-    if (saveChangesEnabled) saveSidebarConfig();
+    saveSidebarConfig();
   }
   if (sidebarIcon.hasPointerCapture(event.pointerId)) {
     sidebarIcon.releasePointerCapture(event.pointerId);
@@ -257,7 +267,7 @@ sidebarIcon.addEventListener("pointercancel", () => {
   pointerActive = false;
   sidebarIcon.style.cursor = "pointer";
   if (pointerMoved) {
-    if (saveChangesEnabled) saveSidebarConfig();
+    saveSidebarConfig();
   }
 });
 
@@ -278,7 +288,7 @@ sidebarIcon.addEventListener("dblclick", event => {
   if (clickTimer) clearTimeout(clickTimer);
   clickTimer = null;
   resetSidebarSize();
-  if (saveChangesEnabled) saveSidebarConfig();
+  saveSidebarConfig();
 });
 
 sidebarIcon.addEventListener("keydown", event => {
