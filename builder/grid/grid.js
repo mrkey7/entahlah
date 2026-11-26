@@ -42,7 +42,8 @@
           </div>
         </div>
       </div>`;
-    panelArea.append(panel);
+    const menu = panelArea.querySelector('.sidebar-menu');
+    (menu || panelArea).append(panel);
 
     const picker = panel.querySelector(".grid-picker");
     const toggle = panel.querySelector(".grid-toggle");
