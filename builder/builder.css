@@ -155,7 +155,10 @@ body {
     radial-gradient(circle, currentColor 0 3px, transparent 3.5px) left top,
     radial-gradient(circle, currentColor 0 3px, transparent 3.5px) right top,
     radial-gradient(circle, currentColor 0 3px, transparent 3.5px) left bottom,
-    radial-gradient(circle, currentColor 0 3px, transparent 3.5px) right bottom;
+    radial-gradient(circle, currentColor 0 3px, transparent 3.5px) right bottom,
+    radial-gradient(circle, currentColor 0 3px, transparent 3.5px) left center,
+    radial-gradient(circle, currentColor 0 3px, transparent 3.5px) center top,
+    radial-gradient(circle, currentColor 0 3px, transparent 3.5px) center bottom;
   background-repeat: no-repeat;
 }
 
