@@ -215,7 +215,11 @@ sidebarIcon.addEventListener("pointerdown", event => {
 });
 
 sidebarIcon.addEventListener("pointermove", event => {
-  if (!pointerActive) return;
+  if (!pointerActive) {
+    const rect = sidebarIcon.getBoundingClientRect();
+    sidebarIcon.style.cursor = getResizeHandle(event, rect).cursor;
+    return;
+  }
   const deltaX = event.clientX - pointerStartX;
   const deltaY = event.clientY - pointerStartY;
   if ((resizeAxes.x && Math.abs(deltaX) > 3) ||
