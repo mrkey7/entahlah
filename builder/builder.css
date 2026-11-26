@@ -135,7 +135,7 @@ body {
   height: var(--sidebar-icon-height, clamp(28px, 3cqw, 64px));
   color: #fff;
   mix-blend-mode: difference;
-  cursor: nwse-resize;
+  cursor: pointer;
   touch-action: none;
   user-select: none;
   z-index: 1000;
