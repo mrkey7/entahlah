@@ -10,7 +10,11 @@ const GRID_CONFIG_STORAGE_KEY = "entahlah.grid.config";
 const SIDEBAR_DEFAULT = 25;
 let sidebarPosition = SIDEBAR_DEFAULT;
 let pointerStartX = 0;
+let pointerStartY = 0;
 let pointerStartPosition = SIDEBAR_DEFAULT;
+let pointerStartVerticalPosition = 0.5;
+let sidebarVerticalPosition = 0.5;
+let saveChangesEnabled = false;
 let pointerActive = false;
 let pointerMoved = false;
 let suppressClick = false;
@@ -19,6 +23,40 @@ let clickTimer = null;
 function applySidebarPosition(value) {
   sidebarPosition = Math.max(0, Math.min(100, Number(value)));
   petaG.style.setProperty("--sidebar-width", sidebarPosition + "%");
+}
+
+function applySidebarVerticalPosition(value) {
+  sidebarVerticalPosition = Math.max(0, Math.min(1, Number(value)));
+  petaG.style.setProperty("--sidebar-y", (sidebarVerticalPosition * 100) + "%");
+}
+
+async function loadSidebarConfig() {
+  try {
+    const response = await fetch("builder/sidebar.json", { cache: "no-store" });
+    if (!response.ok) return;
+    const config = await response.json();
+    if (Number.isFinite(config.x) && config.x >= 0 && config.x <= 1) {
+      applySidebarPosition(config.x * 100);
+    }
+    if (Number.isFinite(config.y) && config.y >= 0 && config.y <= 1) {
+      applySidebarVerticalPosition(config.y);
+    }
+  } catch (error) {
+    console.warn("Konfigurasi bawaan sidebar tidak dapat dimuat:", error);
+  }
+}
+
+async function saveSidebarConfig() {
+  try {
+    const response = await fetch("/builder/sidebar.json", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ x: sidebarPosition / 100, y: sidebarVerticalPosition })
+    });
+    if (!response.ok) throw new Error("HTTP " + response.status);
+  } catch (error) {
+    console.warn("Konfigurasi bawaan sidebar tidak dapat disimpan. Jalankan Builder melalui lokal/entahlah.py:", error);
+  }
 }
 
 function updateSidebarIconPosition() {
@@ -112,6 +150,10 @@ function buildSidebarMenu() {
         <option value="dark">Gelap</option>
         <option value="none">Tanpa</option>
       </select>
+      <label class="sidebar-check" for="saveChangesChoice">
+        <input type="checkbox" id="saveChangesChoice">
+        Perubahan
+      </label>
       <label class="sidebar-check" for="gridToolChoice">
         <input type="checkbox" id="gridToolChoice">
         Grid
@@ -121,6 +163,12 @@ function buildSidebarMenu() {
 
   const themeChoice = petaS.querySelector("#themeChoice");
   const gridToolChoice = petaS.querySelector("#gridToolChoice");
+  const saveChangesChoice = petaS.querySelector("#saveChangesChoice");
+
+  saveChangesChoice.checked = false;
+  saveChangesChoice.addEventListener("change", () => {
+    saveChangesEnabled = saveChangesChoice.checked;
+  });
 
   function applyTheme(theme) {
     const selected = ["system", "light", "dark", "none"].includes(theme) ? theme : "system";
@@ -160,20 +208,24 @@ sidebarIcon.addEventListener("pointerdown", event => {
   pointerActive = true;
   pointerMoved = false;
   pointerStartX = event.clientX;
+  pointerStartY = event.clientY;
   pointerStartPosition = sidebarPosition;
+  pointerStartVerticalPosition = sidebarVerticalPosition;
   sidebarIcon.setPointerCapture(event.pointerId);
 });
 
 sidebarIcon.addEventListener("pointermove", event => {
   if (!pointerActive) return;
   const deltaX = event.clientX - pointerStartX;
-  if (Math.abs(deltaX) > 3) pointerMoved = true;
+  const deltaY = event.clientY - pointerStartY;
+  if (Math.abs(deltaX) > 3 || Math.abs(deltaY) > 3) pointerMoved = true;
   if (!pointerMoved) return;
   if (petaG.classList.contains("sidebar-hidden")) setSidebarHidden(false);
 
-  const width = petaG.getBoundingClientRect().width;
-  if (!width) return;
-  applySidebarPosition(pointerStartPosition + (deltaX / width) * 100);
+  const bounds = petaG.getBoundingClientRect();
+  if (!bounds.width || !bounds.height) return;
+  applySidebarPosition(pointerStartPosition + (deltaX / bounds.width) * 100);
+  applySidebarVerticalPosition(pointerStartVerticalPosition + (deltaY / bounds.height));
 });
 
 sidebarIcon.addEventListener("pointerup", event => {
@@ -182,6 +234,7 @@ sidebarIcon.addEventListener("pointerup", event => {
   if (pointerMoved) {
     suppressClick = true;
     saveSidebarPosition();
+    if (saveChangesEnabled) saveSidebarConfig();
   }
   if (sidebarIcon.hasPointerCapture(event.pointerId)) {
     sidebarIcon.releasePointerCapture(event.pointerId);
@@ -190,7 +243,10 @@ sidebarIcon.addEventListener("pointerup", event => {
 
 sidebarIcon.addEventListener("pointercancel", () => {
   pointerActive = false;
-  if (pointerMoved) saveSidebarPosition();
+  if (pointerMoved) {
+    saveSidebarPosition();
+    if (saveChangesEnabled) saveSidebarConfig();
+  }
 });
 
 sidebarIcon.addEventListener("click", () => {
@@ -222,4 +278,5 @@ sidebarIcon.addEventListener("keydown", event => {
 buildSidebarMenu();
 loadSidebarPosition();
 loadSidebarVisibility();
+loadSidebarConfig().then(updateSidebarIconPosition);
 observeSidebarArea();
