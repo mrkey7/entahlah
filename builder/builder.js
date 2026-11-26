@@ -4,6 +4,7 @@ const petaP = document.querySelector("#petaP");
 const sidebarIcon = petaG.querySelector(".sidebar-icon");
 
 const SIDEBAR_STORAGE_KEY = "entahlah.sidebar.position";
+const SIDEBAR_VISIBILITY_KEY = "entahlah.sidebar.hidden";
 const THEME_STORAGE_KEY = "entahlah.theme";
 const GRID_CONFIG_STORAGE_KEY = "entahlah.grid.config";
 const SIDEBAR_DEFAULT = 25;
@@ -43,8 +44,7 @@ function loadSidebarPosition() {
 }
 
 function resetSidebarPosition() {
-  petaG.classList.remove("sidebar-hidden");
-  sidebarIcon.setAttribute("aria-expanded", "true");
+  setSidebarHidden(false);
   applySidebarPosition(SIDEBAR_DEFAULT);
   saveSidebarPosition();
 }
@@ -54,9 +54,27 @@ window.setSidebarPosition = value => {
   saveSidebarPosition();
 };
 
-function toggleSidebar() {
-  const hidden = petaG.classList.toggle("sidebar-hidden");
+function setSidebarHidden(hidden) {
+  petaG.classList.toggle("sidebar-hidden", hidden);
   sidebarIcon.setAttribute("aria-expanded", String(!hidden));
+  try {
+    localStorage.setItem(SIDEBAR_VISIBILITY_KEY, String(hidden));
+  } catch (error) {
+    console.warn("Status sidebar tidak dapat disimpan:", error);
+  }
+}
+
+function loadSidebarVisibility() {
+  try {
+    setSidebarHidden(localStorage.getItem(SIDEBAR_VISIBILITY_KEY) === "true");
+  } catch (error) {
+    console.warn("Status sidebar tidak dapat dimuat:", error);
+    setSidebarHidden(false);
+  }
+}
+
+function toggleSidebar() {
+  setSidebarHidden(!petaG.classList.contains("sidebar-hidden"));
 }
 
 function buildSidebarMenu() {
@@ -127,8 +145,7 @@ sidebarIcon.addEventListener("pointermove", event => {
   const deltaX = event.clientX - pointerStartX;
   if (Math.abs(deltaX) > 3) pointerMoved = true;
   if (!pointerMoved) return;
-  petaG.classList.remove("sidebar-hidden");
-  sidebarIcon.setAttribute("aria-expanded", "true");
+  if (petaG.classList.contains("sidebar-hidden")) setSidebarHidden(false);
 
   const width = petaG.getBoundingClientRect().width;
   if (!width) return;
@@ -180,3 +197,4 @@ sidebarIcon.addEventListener("keydown", event => {
 
 buildSidebarMenu();
 loadSidebarPosition();
+loadSidebarVisibility();
