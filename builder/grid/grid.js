@@ -15,6 +15,8 @@
 
     const overlay = document.createElement("div");
     overlay.id = "gridOverlay";
+    const previewOverlay = document.createElement("div");
+    previewOverlay.id = "gridPreviewOverlay";
 
     const panel = document.createElement("section");
     panel.className = "grid-panel";
@@ -60,7 +62,12 @@
       target.style.setProperty("--grid-kolom", String(kolom));
       target.style.setProperty("--grid-baris", String(baris));
       target.style.setProperty("--grid-outline-width", config.tebalLuar ? "2px" : "1px");
-      target.classList.toggle("aktif", config.aktif);
+      target.classList.toggle("aktif", target === previewOverlay || config.aktif);
+    }
+
+    function resetPreview() {
+      previewOverlay.classList.remove("aktif");
+      renderPicker();
     }
 
     function renderPicker(kolom = config.kolom, baris = config.baris) {
@@ -91,7 +98,7 @@
     function selectArea(area) {
       selectedArea = area;
       config.area = area;
-      areas[area].append(overlay);
+      areas[area].append(overlay, previewOverlay);
       areaButtons.forEach(button => button.classList.toggle("is-active", button.dataset.area === area));
       save();
     }
@@ -104,8 +111,14 @@
         button.dataset.baris = String(baris);
         button.title = kolom + " kolom × " + baris + " baris";
         button.setAttribute("aria-label", button.title);
-        button.addEventListener("mouseenter", () => render(overlay, kolom, baris));
-        button.addEventListener("focus", () => render(overlay, kolom, baris));
+        button.addEventListener("mouseenter", () => {
+          render(previewOverlay, kolom, baris);
+          renderPicker(kolom, baris);
+        });
+        button.addEventListener("focus", () => {
+          render(previewOverlay, kolom, baris);
+          renderPicker(kolom, baris);
+        });
         button.addEventListener("click", () => {
           cols.value = String(kolom);
           rows.value = String(baris);
@@ -115,9 +128,9 @@
       }
     }
 
-    picker.addEventListener("mouseleave", () => render());
+    picker.addEventListener("mouseleave", resetPreview);
     picker.addEventListener("focusout", event => {
-      if (!picker.contains(event.relatedTarget)) render();
+      if (!picker.contains(event.relatedTarget)) resetPreview();
     });
 
     cols.addEventListener("change", save);
