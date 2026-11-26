@@ -21,6 +21,29 @@ function applySidebarPosition(value) {
   petaG.style.setProperty("--sidebar-width", sidebarPosition + "%");
 }
 
+function updateSidebarIconPosition() {
+  if (petaG.classList.contains("sidebar-hidden")) return;
+  const groupRect = petaG.getBoundingClientRect();
+  const sidebarRect = petaS.getBoundingClientRect();
+  const edge = sidebarRect.left - groupRect.left + petaS.clientWidth;
+  petaG.style.setProperty("--sidebar-edge", edge + "px");
+}
+
+function observeSidebarArea() {
+  updateSidebarIconPosition();
+
+  if (!("ResizeObserver" in window)) {
+    window.addEventListener("resize", updateSidebarIconPosition);
+    return;
+  }
+
+  const observer = new ResizeObserver(updateSidebarIconPosition);
+  observer.observe(petaS);
+
+  const menu = petaS.querySelector(".sidebar-menu");
+  if (menu) observer.observe(menu);
+}
+
 function saveSidebarPosition() {
   try {
     localStorage.setItem(SIDEBAR_STORAGE_KEY, String(sidebarPosition));
@@ -57,6 +80,7 @@ window.setSidebarPosition = value => {
 function setSidebarHidden(hidden) {
   petaG.classList.toggle("sidebar-hidden", hidden);
   sidebarIcon.setAttribute("aria-expanded", String(!hidden));
+  if (!hidden) requestAnimationFrame(updateSidebarIconPosition);
   try {
     localStorage.setItem(SIDEBAR_VISIBILITY_KEY, String(hidden));
   } catch (error) {
@@ -198,3 +222,4 @@ sidebarIcon.addEventListener("keydown", event => {
 buildSidebarMenu();
 loadSidebarPosition();
 loadSidebarVisibility();
+observeSidebarArea();
