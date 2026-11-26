@@ -14,6 +14,8 @@ let pointerStartX = 0;
 let pointerStartY = 0;
 let pointerStartWidth = SIDEBAR_SIZE_DEFAULT.width;
 let pointerStartHeight = SIDEBAR_SIZE_DEFAULT.height;
+let resizeAxes = { x: false, y: false };
+let resizeSigns = { x: -1, y: 1 };
 let saveChangesEnabled = false;
 let pointerActive = false;
 let pointerMoved = false;
@@ -172,15 +174,36 @@ function buildSidebarMenu() {
   gridToolChoice.addEventListener("change", () => setGridToolOpen(gridToolChoice.checked));
 }
 
+function getResizeHandle(event, rect) {
+  const edge = Math.min(10, Math.max(5, Math.min(rect.width, rect.height) * 0.22));
+  const left = event.clientX - rect.left <= edge;
+  const right = rect.right - event.clientX <= edge;
+  const top = event.clientY - rect.top <= edge;
+  const bottom = rect.bottom - event.clientY <= edge;
+
+  const horizontal = left || right;
+  const vertical = top || bottom;
+  return {
+    x: horizontal,
+    y: vertical,
+    signX: -1,
+    signY: top ? -1 : 1
+  };
+}
+
 sidebarIcon.addEventListener("pointerdown", event => {
   if (event.button !== 0) return;
+  const currentSize = sidebarIcon.getBoundingClientRect();
+  resizeAxes = getResizeHandle(event, currentSize);
+  if (!resizeAxes.x && !resizeAxes.y) return;
+
   pointerActive = true;
   pointerMoved = false;
   pointerStartX = event.clientX;
   pointerStartY = event.clientY;
-  const currentSize = sidebarIcon.getBoundingClientRect();
   pointerStartWidth = currentSize.width;
   pointerStartHeight = currentSize.height;
+  resizeSigns = { x: resizeAxes.signX, y: resizeAxes.signY };
   sidebarIcon.setPointerCapture(event.pointerId);
 });
 
@@ -188,11 +211,17 @@ sidebarIcon.addEventListener("pointermove", event => {
   if (!pointerActive) return;
   const deltaX = event.clientX - pointerStartX;
   const deltaY = event.clientY - pointerStartY;
-  if (Math.abs(deltaX) > 3 || Math.abs(deltaY) > 3) pointerMoved = true;
+  if ((resizeAxes.x && Math.abs(deltaX) > 3) ||
+      (resizeAxes.y && Math.abs(deltaY) > 3)) pointerMoved = true;
   if (!pointerMoved) return;
-  if (petaG.classList.contains("sidebar-hidden")) setSidebarHidden(false);
 
-  applySidebarSize(pointerStartWidth + deltaX, pointerStartHeight + deltaY);
+  const width = resizeAxes.x
+    ? pointerStartWidth + deltaX * resizeSigns.x
+    : pointerStartWidth;
+  const height = resizeAxes.y
+    ? pointerStartHeight + deltaY * resizeSigns.y
+    : pointerStartHeight;
+  applySidebarSize(width, height);
 });
 
 sidebarIcon.addEventListener("pointerup", event => {
