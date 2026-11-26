@@ -231,6 +231,7 @@ sidebarIcon.addEventListener("dblclick", event => {
   if (clickTimer) clearTimeout(clickTimer);
   clickTimer = null;
   resetSidebarSize();
+  if (saveChangesEnabled) saveSidebarConfig();
 });
 
 sidebarIcon.addEventListener("keydown", event => {
