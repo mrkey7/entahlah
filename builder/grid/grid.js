@@ -148,6 +148,10 @@
       open: () => panel.hidden = false,
       close: () => panel.hidden = true,
       toggle: () => panel.hidden = !panel.hidden,
+      setVisible: visible => {
+        toggle.checked = Boolean(visible);
+        save();
+      },
       render
     });
     return window.GridBuilder;
