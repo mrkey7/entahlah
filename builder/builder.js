@@ -17,7 +17,9 @@ let pointerStartHeight = SIDEBAR_SIZE_DEFAULT.height;
 let pointerStartCenterY = 0;
 let resizeAxes = { x: false, y: false };
 let resizeSigns = { x: -1, y: 1 };
-let saveChangesEnabled = false;
+let resizeMode = false;
+let resizeOriginalSize = null;
+let resizeOriginalY = "";
 let pointerActive = false;
 let pointerMoved = false;
 let suppressClick = false;
@@ -122,10 +124,7 @@ function buildSidebarMenu() {
         <option value="dark">Gelap</option>
         <option value="none">Tanpa</option>
       </select>
-      <label class="sidebar-check" for="saveChangesChoice">
-        <input type="checkbox" id="saveChangesChoice">
-        Perubahan
-      </label>
+      <button type="button" id="resizeToggle" class="sidebar-resize-toggle">Resize</button>
       <label class="sidebar-check" for="gridToolChoice">
         <input type="checkbox" id="gridToolChoice">
         Grid
@@ -135,17 +134,46 @@ function buildSidebarMenu() {
 
   const themeChoice = petaS.querySelector("#themeChoice");
   const gridToolChoice = petaS.querySelector("#gridToolChoice");
-  const saveChangesChoice = petaS.querySelector("#saveChangesChoice");
+  const resizeToggle = petaS.querySelector("#resizeToggle");
 
-  saveChangesChoice.checked = false;
-  saveChangesEnabled = false;
-  sidebarIcon.classList.remove("resize-enabled");
-  saveChangesChoice.addEventListener("change", () => {
-    saveChangesEnabled = saveChangesChoice.checked;
-    sidebarIcon.classList.toggle("resize-enabled", saveChangesEnabled);
-    sidebarIcon.setAttribute("aria-label", saveChangesEnabled
-      ? "Editor ukuran aktif: tarik sisi atau sudut untuk mengubah ukuran"
+  function setResizeMode(active) {
+    resizeMode = active;
+    sidebarIcon.classList.toggle("resize-enabled", active);
+    resizeToggle.textContent = active ? "Simpan" : "Resize";
+    sidebarIcon.setAttribute("aria-label", active
+      ? "Editor ukuran aktif: tarik sisi kiri atau sisi atas dan bawah"
       : "Buka atau tutup sidebar");
+  }
+
+  function cancelResize() {
+    if (!resizeMode) return;
+    if (resizeOriginalSize) {
+      applySidebarSize(resizeOriginalSize.width, resizeOriginalSize.height);
+    }
+    if (resizeOriginalY) petaG.style.setProperty("--sidebar-y", resizeOriginalY);
+    else petaG.style.removeProperty("--sidebar-y");
+    resizeOriginalSize = null;
+    resizeOriginalY = "";
+    setResizeMode(false);
+  }
+
+  resizeToggle.addEventListener("click", async () => {
+    if (!resizeMode) {
+      resizeOriginalSize = { ...sidebarSize };
+      resizeOriginalY = petaG.style.getPropertyValue("--sidebar-y");
+      setResizeMode(true);
+      return;
+    }
+    await saveSidebarConfig();
+    resizeOriginalSize = null;
+    resizeOriginalY = "";
+    setResizeMode(false);
+  });
+
+  document.addEventListener("pointerdown", event => {
+    if (!resizeMode) return;
+    if (sidebarIcon.contains(event.target) || resizeToggle.contains(event.target)) return;
+    cancelResize();
   });
 
   function applyTheme(theme) {
@@ -184,15 +212,15 @@ function buildSidebarMenu() {
 function getResizeHandle(event, rect) {
   const edge = Math.min(10, Math.max(5, Math.min(rect.width, rect.height) * 0.22));
   const left = event.clientX - rect.left <= edge;
-  const right = rect.right - event.clientX <= edge;
   const top = event.clientY - rect.top <= edge;
   const bottom = rect.bottom - event.clientY <= edge;
 
-  const horizontal = left || right;
+  // Sisi kanan dikunci pada batas kanan petaS; lebar hanya diubah dari sisi kiri.
+  const horizontal = left;
   const vertical = top || bottom;
   const corner = horizontal && vertical;
   const side = horizontal ? "ew-resize" : vertical ? "ns-resize" : "pointer";
-  const cornerCursor = (left && top) || (right && bottom) ? "nwse-resize" : "nesw-resize";
+  const cornerCursor = (left && top) || (left && bottom) ? "nesw-resize" : "nwse-resize";
   return {
     x: horizontal,
     y: vertical,
@@ -203,7 +231,7 @@ function getResizeHandle(event, rect) {
 }
 
 sidebarIcon.addEventListener("pointerdown", event => {
-  if (event.button !== 0 || !saveChangesEnabled) return;
+  if (event.button !== 0 || !resizeMode) return;
   const currentSize = sidebarIcon.getBoundingClientRect();
   resizeAxes = getResizeHandle(event, currentSize);
   sidebarIcon.style.cursor = resizeAxes.cursor;
@@ -222,7 +250,7 @@ sidebarIcon.addEventListener("pointerdown", event => {
 
 sidebarIcon.addEventListener("pointermove", event => {
   if (!pointerActive) {
-    if (!saveChangesEnabled) {
+    if (!resizeMode) {
       sidebarIcon.style.cursor = "pointer";
       return;
     }
@@ -254,10 +282,7 @@ sidebarIcon.addEventListener("pointerup", event => {
   if (!pointerActive) return;
   pointerActive = false;
   sidebarIcon.style.cursor = "pointer";
-  if (pointerMoved) {
-    suppressClick = true;
-    saveSidebarConfig();
-  }
+  if (pointerMoved) suppressClick = true;
   if (sidebarIcon.hasPointerCapture(event.pointerId)) {
     sidebarIcon.releasePointerCapture(event.pointerId);
   }
@@ -266,12 +291,11 @@ sidebarIcon.addEventListener("pointerup", event => {
 sidebarIcon.addEventListener("pointercancel", () => {
   pointerActive = false;
   sidebarIcon.style.cursor = "pointer";
-  if (pointerMoved) {
-    saveSidebarConfig();
-  }
+  if (pointerMoved) cancelResize();
 });
 
 sidebarIcon.addEventListener("click", () => {
+  if (resizeMode) return;
   if (suppressClick) {
     suppressClick = false;
     return;
@@ -284,6 +308,7 @@ sidebarIcon.addEventListener("click", () => {
 });
 
 sidebarIcon.addEventListener("dblclick", event => {
+  if (resizeMode) return;
   event.preventDefault();
   if (clickTimer) clearTimeout(clickTimer);
   clickTimer = null;
