@@ -5,6 +5,7 @@ const sidebarIcon = petaG.querySelector(".sidebar-icon");
 
 const SIDEBAR_STORAGE_KEY = "entahlah.sidebar.position";
 const THEME_STORAGE_KEY = "entahlah.theme";
+const GRID_TOOL_STORAGE_KEY = "entahlah.grid.tool";
 const SIDEBAR_DEFAULT = 25;
 let sidebarPosition = SIDEBAR_DEFAULT;
 let pointerStartX = 0;
@@ -67,10 +68,15 @@ function buildSidebarMenu() {
         <option value="dark">Gelap</option>
         <option value="none">Tanpa</option>
       </select>
+      <label class="sidebar-check" for="gridToolChoice">
+        <input type="checkbox" id="gridToolChoice">
+        Grid
+      </label>
     </div>
   `;
 
   const themeChoice = petaS.querySelector("#themeChoice");
+  const gridToolChoice = petaS.querySelector("#gridToolChoice");
 
   function applyTheme(theme) {
     const selected = ["system", "light", "dark", "none"].includes(theme) ? theme : "system";
@@ -92,6 +98,36 @@ function buildSidebarMenu() {
 
   themeChoice.addEventListener("change", () => applyTheme(themeChoice.value));
   applyTheme(savedTheme);
+
+  let gridToolEnabled = false;
+  try {
+    gridToolEnabled = localStorage.getItem(GRID_TOOL_STORAGE_KEY) === "true";
+  } catch (error) {
+    console.warn("Status tool Grid tidak dapat dimuat:", error);
+  }
+
+  gridToolChoice.checked = gridToolEnabled;
+  gridToolChoice.addEventListener("change", async () => {
+    const enabled = gridToolChoice.checked;
+    try {
+      localStorage.setItem(GRID_TOOL_STORAGE_KEY, String(enabled));
+    } catch (error) {
+      console.warn("Status tool Grid tidak dapat disimpan:", error);
+    }
+
+    if (enabled) {
+      if (!window.GridBuilder && window.initGridBuilder) {
+        await window.initGridBuilder({ panelArea: petaS, areas: { G: petaG, S: petaS, P: petaP } });
+      }
+      window.GridBuilder?.open();
+    } else {
+      window.GridBuilder?.close();
+    }
+  });
+
+  if (gridToolEnabled && window.initGridBuilder) {
+    window.initGridBuilder({ panelArea: petaS, areas: { G: petaG, S: petaS, P: petaP } });
+  }
 }
 
 sidebarIcon.addEventListener("pointerdown", event => {
