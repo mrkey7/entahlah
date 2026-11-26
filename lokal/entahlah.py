@@ -31,16 +31,16 @@ class Handler(SimpleHTTPRequestHandler):
             if not isinstance(data, dict):
                 raise ValueError("Format JSON tidak valid")
 
-            x = data.get("x")
-            y = data.get("y")
-            if (not isinstance(x, (int, float)) or isinstance(x, bool)
-                    or not isinstance(y, (int, float)) or isinstance(y, bool)
-                    or not 0 <= x <= 1 or not 0 <= y <= 1):
-                raise ValueError("Koordinat harus berupa angka antara 0 dan 1")
+            width = data.get("width")
+            height = data.get("height")
+            if (not isinstance(width, (int, float)) or isinstance(width, bool)
+                    or not isinstance(height, (int, float)) or isinstance(height, bool)
+                    or not 16 <= width <= 160 or not 16 <= height <= 160):
+                raise ValueError("Lebar dan tinggi ikon harus antara 16 dan 160 piksel")
 
             BUILDER.mkdir(exist_ok=True)
             SIDEBAR_CONFIG.write_text(
-                json.dumps({"x": x, "y": y}, indent=2) + "\n",
+                json.dumps({"width": width, "height": height}, indent=2) + "\n",
                 encoding="utf-8"
             )
 
