@@ -23,20 +23,16 @@ body {
 
 .sidebar-icon {
   position: absolute;
-  left: 0;
-  top: 0;
+  left: 25%;
+  top: 50%;
+  transform: translate(-50%, -50%);
   width: clamp(28px, 3cqw, 64px);
   aspect-ratio: 1;
   color: #fff;
   mix-blend-mode: difference;
-  cursor: grab;
-  touch-action: none;
+  cursor: pointer;
   user-select: none;
   z-index: 1000;
-}
-
-.sidebar-icon:active {
-  cursor: grabbing;
 }
 
 .sidebar-icon svg {
