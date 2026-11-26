@@ -43,6 +43,8 @@ function loadSidebarPosition() {
 }
 
 function resetSidebarPosition() {
+  petaG.classList.remove("sidebar-hidden");
+  sidebarIcon.setAttribute("aria-expanded", "true");
   applySidebarPosition(SIDEBAR_DEFAULT);
   saveSidebarPosition();
 }
@@ -53,8 +55,8 @@ window.setSidebarPosition = value => {
 };
 
 function toggleSidebar() {
-  const opened = petaS.classList.toggle("terbuka");
-  sidebarIcon.setAttribute("aria-expanded", String(opened));
+  const hidden = petaG.classList.toggle("sidebar-hidden");
+  sidebarIcon.setAttribute("aria-expanded", String(!hidden));
 }
 
 function buildSidebarMenu() {
@@ -125,6 +127,8 @@ sidebarIcon.addEventListener("pointermove", event => {
   const deltaX = event.clientX - pointerStartX;
   if (Math.abs(deltaX) > 3) pointerMoved = true;
   if (!pointerMoved) return;
+  petaG.classList.remove("sidebar-hidden");
+  sidebarIcon.setAttribute("aria-expanded", "true");
 
   const width = petaG.getBoundingClientRect().width;
   if (!width) return;
