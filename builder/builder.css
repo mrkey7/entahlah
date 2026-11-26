@@ -131,11 +131,11 @@ body {
   left: var(--sidebar-edge, var(--sidebar-width));
   top: var(--sidebar-y, 50%);
   transform: translate(-100%, -50%);
-  width: clamp(28px, 3cqw, 64px);
-  aspect-ratio: 1;
+  width: var(--sidebar-icon-width, clamp(28px, 3cqw, 64px));
+  height: var(--sidebar-icon-height, clamp(28px, 3cqw, 64px));
   color: #fff;
   mix-blend-mode: difference;
-  cursor: move;
+  cursor: nwse-resize;
   touch-action: none;
   user-select: none;
   z-index: 1000;
