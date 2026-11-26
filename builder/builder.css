@@ -4,42 +4,6 @@ body {
   height: 100%;
   margin: 0;
   overflow: hidden;
-  color-scheme: light;
-}
-
-:root {
-  --page-bg: #ffffff;
-  --page-fg: #202124;
-  --sidebar-bg: #f2f3f5;
-  --sidebar-border: #d5d7dc;
-  --control-bg: #ffffff;
-  --control-border: #aeb3bb;
-}
-
-:root[data-theme="dark"] {
-  color-scheme: dark;
-  --page-bg: #17191d;
-  --page-fg: #e8eaed;
-  --sidebar-bg: #22252b;
-  --sidebar-border: #414650;
-  --control-bg: #30343b;
-  --control-border: #5c636e;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="system"] {
-    color-scheme: dark;
-    --page-bg: #17191d;
-    --page-fg: #e8eaed;
-    --sidebar-bg: #22252b;
-    --sidebar-border: #414650;
-    --control-bg: #30343b;
-    --control-border: #5c636e;
-  }
-}
-
-:root[data-theme="light"] {
-  color-scheme: light;
 }
 
 #petaG {
@@ -48,13 +12,12 @@ body {
   inset: 0;
   display: flex;
   container-type: size;
-  color: var(--page-fg);
-  background-color: var(--page-bg);
+  background-color: #fff;
   background-image:
-    linear-gradient(45deg, color-mix(in srgb, var(--page-fg) 10%, transparent) 25%, transparent 25%),
-    linear-gradient(-45deg, color-mix(in srgb, var(--page-fg) 10%, transparent) 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, color-mix(in srgb, var(--page-fg) 10%, transparent) 75%),
-    linear-gradient(-45deg, transparent 75%, color-mix(in srgb, var(--page-fg) 10%, transparent) 75%);
+    linear-gradient(45deg, #c8c8c8 25%, transparent 25%),
+    linear-gradient(-45deg, #c8c8c8 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #c8c8c8 75%),
+    linear-gradient(-45deg, transparent 75%, #c8c8c8 75%);
   background-size: 24px 24px;
   background-position: 0 0, 0 12px, 12px -12px, -12px 0;
   background-repeat: repeat;
@@ -71,8 +34,41 @@ body {
 #petaS {
   flex: 0 0 var(--sidebar-width);
   overflow: hidden;
-  background: var(--sidebar-bg);
-  border-right: 1px solid var(--sidebar-border);
+  background: transparent;
+  color: inherit;
+  border-right: 0;
+}
+
+#petaS[data-theme="light"] {
+  color-scheme: light;
+  background: #f2f3f5;
+  color: #202124;
+  border-right: 1px solid #d5d7dc;
+}
+
+#petaS[data-theme="dark"] {
+  color-scheme: dark;
+  background: #22252b;
+  color: #e8eaed;
+  border-right: 1px solid #414650;
+}
+
+@media (prefers-color-scheme: light) {
+  #petaS[data-theme="system"] {
+    color-scheme: light;
+    background: #f2f3f5;
+    color: #202124;
+    border-right: 1px solid #d5d7dc;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  #petaS[data-theme="system"] {
+    color-scheme: dark;
+    background: #22252b;
+    color: #e8eaed;
+    border-right: 1px solid #414650;
+  }
 }
 
 #petaP {
@@ -83,7 +79,7 @@ body {
 .sidebar-menu {
   display: none;
   padding: 16px;
-  color: var(--page-fg);
+  color: inherit;
   font: 14px/1.45 system-ui, sans-serif;
 }
 
@@ -104,21 +100,27 @@ body {
 .sidebar-menu select {
   width: 100%;
   padding: 8px;
-  border: 1px solid var(--control-border);
+  border: 1px solid currentColor;
   border-radius: 6px;
-  background: var(--control-bg);
-  color: var(--page-fg);
+  background: transparent;
+  color: inherit;
   font: inherit;
+}
+
+.sidebar-menu select option {
+  background: Canvas;
+  color: CanvasText;
 }
 
 .sidebar-icon {
   position: absolute;
   left: var(--sidebar-width);
   top: 50%;
-  transform: translate(-50%, -50%);
+  transform: translate(-100%, -50%);
   width: clamp(28px, 3cqw, 64px);
   aspect-ratio: 1;
-  color: var(--page-fg);
+  color: #fff;
+  mix-blend-mode: difference;
   cursor: ew-resize;
   touch-action: none;
   user-select: none;
