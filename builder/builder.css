@@ -78,9 +78,6 @@ body {
   visibility: hidden;
 }
 
-#petaG.sidebar-hidden .sidebar-icon {
-  left: 0;
-}
 
 #petaP {
   flex: 1 1 0;
