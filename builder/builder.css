@@ -128,7 +128,7 @@ body {
 
 .sidebar-icon {
   position: absolute;
-  left: var(--sidebar-width);
+  left: var(--sidebar-edge, var(--sidebar-width));
   top: 50%;
   transform: translate(-100%, -50%);
   width: clamp(28px, 3cqw, 64px);
