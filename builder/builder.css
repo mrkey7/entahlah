@@ -141,6 +141,24 @@ body {
   z-index: 1000;
 }
 
+.sidebar-icon.resize-enabled {
+  outline: 1px dashed currentColor;
+  outline-offset: 4px;
+}
+
+.sidebar-icon.resize-enabled::after {
+  content: "";
+  position: absolute;
+  inset: -5px;
+  pointer-events: none;
+  background:
+    radial-gradient(circle, currentColor 0 3px, transparent 3.5px) left top,
+    radial-gradient(circle, currentColor 0 3px, transparent 3.5px) right top,
+    radial-gradient(circle, currentColor 0 3px, transparent 3.5px) left bottom,
+    radial-gradient(circle, currentColor 0 3px, transparent 3.5px) right bottom;
+  background-repeat: no-repeat;
+}
+
 .sidebar-icon svg {
   display: block;
   width: 100%;
