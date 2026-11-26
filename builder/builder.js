@@ -210,23 +210,25 @@ function buildSidebarMenu() {
 }
 
 function getResizeHandle(event, rect) {
-  const edge = Math.min(10, Math.max(5, Math.min(rect.width, rect.height) * 0.22));
+  const edge = Math.min(12, Math.max(8, Math.min(rect.width, rect.height) * 0.25));
   const left = event.clientX - rect.left <= edge;
   const top = event.clientY - rect.top <= edge;
   const bottom = rect.bottom - event.clientY <= edge;
 
-  // Sisi kanan dikunci pada batas kanan petaS; lebar hanya diubah dari sisi kiri.
+  // Lebar hanya berubah dari sisi kiri; sisi kanan tetap menjadi titik jangkar.
   const horizontal = left;
   const vertical = top || bottom;
   const corner = horizontal && vertical;
-  const side = horizontal ? "ew-resize" : vertical ? "ns-resize" : "pointer";
-  const cornerCursor = (left && top) || (left && bottom) ? "nesw-resize" : "nwse-resize";
+  const cursor = corner
+    ? ((left && top) ? "nesw-resize" : "nwse-resize")
+    : horizontal ? "ew-resize" : vertical ? "ns-resize" : "pointer";
+
   return {
     x: horizontal,
     y: vertical,
     signX: -1,
     signY: top ? -1 : 1,
-    cursor: corner ? cornerCursor : side
+    cursor
   };
 }
 
