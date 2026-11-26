@@ -65,6 +65,7 @@ function buildSidebarMenu() {
         <option value="system">System</option>
         <option value="light">Terang</option>
         <option value="dark">Gelap</option>
+        <option value="none">Tanpa</option>
       </select>
     </div>
   `;
@@ -72,8 +73,8 @@ function buildSidebarMenu() {
   const themeChoice = petaS.querySelector("#themeChoice");
 
   function applyTheme(theme) {
-    const selected = ["system", "light", "dark"].includes(theme) ? theme : "system";
-    document.documentElement.dataset.theme = selected;
+    const selected = ["system", "light", "dark", "none"].includes(theme) ? theme : "system";
+    petaS.dataset.theme = selected;
     themeChoice.value = selected;
     try {
       localStorage.setItem(THEME_STORAGE_KEY, selected);
