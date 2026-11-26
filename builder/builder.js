@@ -5,7 +5,7 @@ const sidebarIcon = petaG.querySelector(".sidebar-icon");
 
 const SIDEBAR_STORAGE_KEY = "entahlah.sidebar.position";
 const THEME_STORAGE_KEY = "entahlah.theme";
-const GRID_TOOL_STORAGE_KEY = "entahlah.grid.tool";
+const GRID_CONFIG_STORAGE_KEY = "entahlah.grid.config";
 const SIDEBAR_DEFAULT = 25;
 let sidebarPosition = SIDEBAR_DEFAULT;
 let pointerStartX = 0;
@@ -99,35 +99,25 @@ function buildSidebarMenu() {
   themeChoice.addEventListener("change", () => applyTheme(themeChoice.value));
   applyTheme(savedTheme);
 
-  let gridToolEnabled = false;
+  let gridVisible = false;
   try {
-    gridToolEnabled = localStorage.getItem(GRID_TOOL_STORAGE_KEY) === "true";
+    const gridConfig = JSON.parse(localStorage.getItem(GRID_CONFIG_STORAGE_KEY) || "null");
+    gridVisible = Boolean(gridConfig?.aktif);
   } catch (error) {
-    console.warn("Status tool Grid tidak dapat dimuat:", error);
+    console.warn("Status Grid tidak dapat dimuat:", error);
   }
 
-  gridToolChoice.checked = gridToolEnabled;
-  gridToolChoice.addEventListener("change", async () => {
-    const enabled = gridToolChoice.checked;
-    try {
-      localStorage.setItem(GRID_TOOL_STORAGE_KEY, String(enabled));
-    } catch (error) {
-      console.warn("Status tool Grid tidak dapat disimpan:", error);
-    }
+  gridToolChoice.checked = gridVisible;
 
-    if (enabled) {
-      if (!window.GridBuilder && window.initGridBuilder) {
-        await window.initGridBuilder({ panelArea: petaS, areas: { G: petaG, S: petaS, P: petaP } });
-      }
-      window.GridBuilder?.open();
-    } else {
-      window.GridBuilder?.close();
+  async function setGridVisible(visible) {
+    if (!window.GridBuilder && window.initGridBuilder) {
+      await window.initGridBuilder({ panelArea: petaS, areas: { G: petaG, S: petaS, P: petaP } });
     }
-  });
-
-  if (gridToolEnabled && window.initGridBuilder) {
-    window.initGridBuilder({ panelArea: petaS, areas: { G: petaG, S: petaS, P: petaP } });
+    window.GridBuilder?.setVisible(visible);
   }
+
+  gridToolChoice.addEventListener("change", () => setGridVisible(gridToolChoice.checked));
+  if (window.initGridBuilder) setGridVisible(gridVisible);
 }
 
 sidebarIcon.addEventListener("pointerdown", event => {
