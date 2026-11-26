@@ -1,4 +1,5 @@
-#gridOverlay {
+#gridOverlay,
+#gridPreviewOverlay {
   position: absolute;
   inset: 0;
   z-index: 10;
@@ -17,7 +18,8 @@
     100% calc(100% / var(--grid-baris, 4));
   background-repeat: repeat, repeat;
 }
-#gridOverlay.aktif { display: block; }
+#gridOverlay.aktif,
+#gridPreviewOverlay.aktif { display: block; }
 
 .grid-panel {
   position: absolute;
