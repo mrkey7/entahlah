@@ -3,31 +3,30 @@ const petaS = document.querySelector("#petaS");
 const petaP = document.querySelector("#petaP");
 const sidebarIcon = petaG.querySelector(".sidebar-icon");
 
-const SIDEBAR_STORAGE_KEY = "entahlah.sidebar.position";
+const SIDEBAR_SIZE_DEFAULT = { width: 48, height: 48 };
+let sidebarSize = { ...SIDEBAR_SIZE_DEFAULT };
 const SIDEBAR_VISIBILITY_KEY = "entahlah.sidebar.hidden";
 const THEME_STORAGE_KEY = "entahlah.theme";
 const GRID_CONFIG_STORAGE_KEY = "entahlah.grid.config";
-const SIDEBAR_DEFAULT = 25;
-let sidebarPosition = SIDEBAR_DEFAULT;
+const SIDEBAR_SIZE_MIN = 16;
+const SIDEBAR_SIZE_MAX = 160;
 let pointerStartX = 0;
 let pointerStartY = 0;
-let pointerStartPosition = SIDEBAR_DEFAULT;
-let pointerStartVerticalPosition = 0.5;
-let sidebarVerticalPosition = 0.5;
+let pointerStartWidth = SIDEBAR_SIZE_DEFAULT.width;
+let pointerStartHeight = SIDEBAR_SIZE_DEFAULT.height;
 let saveChangesEnabled = false;
 let pointerActive = false;
 let pointerMoved = false;
 let suppressClick = false;
 let clickTimer = null;
 
-function applySidebarPosition(value) {
-  sidebarPosition = Math.max(0, Math.min(100, Number(value)));
-  petaG.style.setProperty("--sidebar-width", sidebarPosition + "%");
-}
-
-function applySidebarVerticalPosition(value) {
-  sidebarVerticalPosition = Math.max(0, Math.min(1, Number(value)));
-  petaG.style.setProperty("--sidebar-y", (sidebarVerticalPosition * 100) + "%");
+function applySidebarSize(width, height) {
+  sidebarSize = {
+    width: Math.max(SIDEBAR_SIZE_MIN, Math.min(SIDEBAR_SIZE_MAX, Number(width))),
+    height: Math.max(SIDEBAR_SIZE_MIN, Math.min(SIDEBAR_SIZE_MAX, Number(height)))
+  };
+  petaG.style.setProperty("--sidebar-icon-width", sidebarSize.width + "px");
+  petaG.style.setProperty("--sidebar-icon-height", sidebarSize.height + "px");
 }
 
 async function loadSidebarConfig() {
@@ -35,14 +34,13 @@ async function loadSidebarConfig() {
     const response = await fetch("builder/sidebar.json", { cache: "no-store" });
     if (!response.ok) return;
     const config = await response.json();
-    if (Number.isFinite(config.x) && config.x >= 0 && config.x <= 1) {
-      applySidebarPosition(config.x * 100);
-    }
-    if (Number.isFinite(config.y) && config.y >= 0 && config.y <= 1) {
-      applySidebarVerticalPosition(config.y);
+    const width = Number(config.width);
+    const height = Number(config.height);
+    if (Number.isFinite(width) && Number.isFinite(height)) {
+      applySidebarSize(width, height);
     }
   } catch (error) {
-    console.warn("Konfigurasi bawaan sidebar tidak dapat dimuat:", error);
+    console.warn("Konfigurasi ukuran ikon sidebar tidak dapat dimuat:", error);
   }
 }
 
@@ -51,11 +49,11 @@ async function saveSidebarConfig() {
     const response = await fetch("/builder/sidebar.json", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ x: sidebarPosition / 100, y: sidebarVerticalPosition })
+      body: JSON.stringify(sidebarSize)
     });
     if (!response.ok) throw new Error("HTTP " + response.status);
   } catch (error) {
-    console.warn("Konfigurasi bawaan sidebar tidak dapat disimpan. Jalankan Builder melalui lokal/entahlah.py:", error);
+    console.warn("Ukuran bawaan ikon sidebar tidak dapat disimpan. Jalankan Builder melalui lokal/entahlah.py:", error);
   }
 }
 
@@ -82,38 +80,9 @@ function observeSidebarArea() {
   if (menu) observer.observe(menu);
 }
 
-function saveSidebarPosition() {
-  try {
-    localStorage.setItem(SIDEBAR_STORAGE_KEY, String(sidebarPosition));
-  } catch (error) {
-    console.warn("Posisi sidebar tidak dapat disimpan:", error);
-  }
+function resetSidebarSize() {
+  applySidebarSize(SIDEBAR_SIZE_DEFAULT.width, SIDEBAR_SIZE_DEFAULT.height);
 }
-
-function loadSidebarPosition() {
-  try {
-    const savedValue = localStorage.getItem(SIDEBAR_STORAGE_KEY);
-    const saved = Number(savedValue);
-    if (savedValue !== null && Number.isFinite(saved)) {
-      applySidebarPosition(saved);
-      return;
-    }
-  } catch (error) {
-    console.warn("Posisi sidebar tidak dapat dimuat:", error);
-  }
-  applySidebarPosition(SIDEBAR_DEFAULT);
-}
-
-function resetSidebarPosition() {
-  setSidebarHidden(false);
-  applySidebarPosition(SIDEBAR_DEFAULT);
-  saveSidebarPosition();
-}
-
-window.setSidebarPosition = value => {
-  applySidebarPosition(value);
-  saveSidebarPosition();
-};
 
 function setSidebarHidden(hidden) {
   petaG.classList.toggle("sidebar-hidden", hidden);
@@ -209,8 +178,9 @@ sidebarIcon.addEventListener("pointerdown", event => {
   pointerMoved = false;
   pointerStartX = event.clientX;
   pointerStartY = event.clientY;
-  pointerStartPosition = sidebarPosition;
-  pointerStartVerticalPosition = sidebarVerticalPosition;
+  const currentSize = sidebarIcon.getBoundingClientRect();
+  pointerStartWidth = currentSize.width;
+  pointerStartHeight = currentSize.height;
   sidebarIcon.setPointerCapture(event.pointerId);
 });
 
@@ -222,10 +192,7 @@ sidebarIcon.addEventListener("pointermove", event => {
   if (!pointerMoved) return;
   if (petaG.classList.contains("sidebar-hidden")) setSidebarHidden(false);
 
-  const bounds = petaG.getBoundingClientRect();
-  if (!bounds.width || !bounds.height) return;
-  applySidebarPosition(pointerStartPosition + (deltaX / bounds.width) * 100);
-  applySidebarVerticalPosition(pointerStartVerticalPosition + (deltaY / bounds.height));
+  applySidebarSize(pointerStartWidth + deltaX, pointerStartHeight + deltaY);
 });
 
 sidebarIcon.addEventListener("pointerup", event => {
@@ -233,7 +200,6 @@ sidebarIcon.addEventListener("pointerup", event => {
   pointerActive = false;
   if (pointerMoved) {
     suppressClick = true;
-    saveSidebarPosition();
     if (saveChangesEnabled) saveSidebarConfig();
   }
   if (sidebarIcon.hasPointerCapture(event.pointerId)) {
@@ -244,7 +210,6 @@ sidebarIcon.addEventListener("pointerup", event => {
 sidebarIcon.addEventListener("pointercancel", () => {
   pointerActive = false;
   if (pointerMoved) {
-    saveSidebarPosition();
     if (saveChangesEnabled) saveSidebarConfig();
   }
 });
@@ -265,7 +230,7 @@ sidebarIcon.addEventListener("dblclick", event => {
   event.preventDefault();
   if (clickTimer) clearTimeout(clickTimer);
   clickTimer = null;
-  resetSidebarPosition();
+  resetSidebarSize();
 });
 
 sidebarIcon.addEventListener("keydown", event => {
@@ -276,7 +241,6 @@ sidebarIcon.addEventListener("keydown", event => {
 });
 
 buildSidebarMenu();
-loadSidebarPosition();
 loadSidebarVisibility();
 loadSidebarConfig().then(updateSidebarIconPosition);
 observeSidebarArea();
